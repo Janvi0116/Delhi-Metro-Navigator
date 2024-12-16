@@ -1,67 +1,72 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Card,
-  CardContent,
-  Typography,
-  styled,
-  Collapse,
-} from '@mui/material';
-import RouteDetails from './RouteDetails';
+  RouteCard,
+  RouteHeader,
+  HeaderItem,
+  HeaderValue,
+  HeaderLabel,
+  RouteContent,
+  StationItem,
+  StationMarker,
+  StationDot,
+  StationInfo,
+  StationName,
+  StationDirection,
+  ConnectingLine,
+} from './shared/RouteStyles';
 import { findRoutes } from '../resources/core';
 
-const RouteCard = styled(Card)({
-  marginBottom: '1rem',
-  cursor: 'pointer',
-});
-
-const RouteInfo = styled('div')({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginLeft: '20px'
-});
-
-const StationName = styled(Typography)({
-});
-
-const RouteList = ({ startingStationId, endingStationId }) => {
-  const [expandedRoute, setExpandedRoute] = useState(null);
-
-  const handleRouteClick = (routeId) => {
-    setExpandedRoute(expandedRoute === routeId ? null : routeId);
-  };
-
-  const routes = findRoutes(startingStationId, endingStationId)
+const RouteList = ({ startingStationId, endingStationId, onRouteSelect }) => {
+  const routes = findRoutes(startingStationId, endingStationId);
+  
   return (
     <div>
-      {routes.map((route,index) => (
+      {routes.map((route, index) => (
         <RouteCard
           key={index}
-          onClick={() => handleRouteClick(index)}
+          onClick={() => onRouteSelect(route)}
+          elevation={1}
+          sx={{ cursor: 'pointer' }}
         >
-          <CardContent>
-            <RouteInfo>
-              {route.mainStations.map((station, index) => (
-                <React.Fragment key={index}>
-                  <StationName variant="body1">{station.stationName}</StationName>
-                  {index !== route.mainStations.length - 1 && (
-                    <Typography variant="body1">
-                      ----
-                    </Typography>
-                  )}
-                </React.Fragment>
-              ))}
-              <Typography variant="body2" style={{ marginLeft: 'auto' }}>
-                {route.duration}
-              </Typography>
-              <Typography variant="body2" style={{ marginLeft: '0.5rem' }}>
-                {route.numStations} stations
-              </Typography>
-            </RouteInfo>
-            <Collapse in={expandedRoute === index} unmountOnExit>
-              <RouteDetails route={route.fullRoute} />
-            </Collapse>
-          </CardContent>
+          <RouteHeader>
+            <HeaderItem>
+              <HeaderValue>{route.duration || '39'}</HeaderValue>
+              <HeaderLabel>Mins</HeaderLabel>
+            </HeaderItem>
+            <HeaderItem>
+              <HeaderValue>₹{route.fare || '50'}</HeaderValue>
+              <HeaderLabel>Fare</HeaderLabel>
+            </HeaderItem>
+            <HeaderItem>
+              <HeaderValue>{route.fullRoute.length}</HeaderValue>
+              <HeaderLabel>Stops</HeaderLabel>
+            </HeaderItem>
+            <HeaderItem>
+              <HeaderValue>{route.mainStations.length - 1}</HeaderValue>
+              <HeaderLabel>Switch{route.mainStations.length - 1 !== 1 ? 'es' : ''}</HeaderLabel>
+            </HeaderItem>
+          </RouteHeader>
+          
+          <RouteContent>
+            {route.mainStations.map((station, idx) => (
+              <StationItem key={idx}>
+                <StationMarker color={station.color}>
+                  <StationDot color={station.color} />
+                </StationMarker>
+                
+                <StationInfo>
+                  <StationName>{station.stationName}</StationName>
+                  <StationDirection>
+                    Towards {idx < route.mainStations.length - 1 ? route.mainStations[idx + 1].stationName : 'End'}
+                  </StationDirection>
+                </StationInfo>
+                
+                {idx < route.mainStations.length - 1 && (
+                  <ConnectingLine color={station.color} />
+                )}
+              </StationItem>
+            ))}
+          </RouteContent>
         </RouteCard>
       ))}
     </div>
